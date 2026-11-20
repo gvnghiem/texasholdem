@@ -143,7 +143,7 @@
       this.postBlind(this.players[bbI], this.bb, 'big blind');
       for (let r = 0; r < 2; r++) {
         let i = sbI;
-        for (let k = 0; k < live.length; k++) { const c = this.deck.pop(); c.fresh = true; this.players[i].hole.push(c); i = this.nextSeat(i, p => !p.out); }
+        for (let k = 0; k < live.length; k++) { const c = this.deck.pop(); this.players[i].hole.push(c); i = this.nextSeat(i, p => !p.out); }
       }
       this.currentBet = this.bb; this.lastRaise = this.bb; this.phase = 'preflop';
       this.log('street', 'Pre-flop: hole cards dealt.');
@@ -226,7 +226,7 @@
     }
     dealCommunity() {
       this.deck.pop();
-      const take = n => { const c = []; for (let i = 0; i < n; i++) { const x = this.deck.pop(); x.fresh = true; c.push(x); } this.board.push(...c); return c; };
+      const take = n => { const c = []; for (let i = 0; i < n; i++) { c.push(this.deck.pop()); } this.board.push(...c); return c; };
       const note = ` · Pot ${fmt(this.pot())}`;
       if (this.board.length === 0) { const c = take(3); this.phase = 'flop'; this.log('street', `Flop: ${c.map(cardStr).join(' ')}${note}`); }
       else if (this.board.length === 3) { const c = take(1); this.phase = 'turn'; this.log('street', `Turn: ${cardStr(c[0])} — board ${this.board.map(cardStr).join(' ')}${note}`); }

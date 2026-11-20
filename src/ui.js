@@ -56,8 +56,8 @@
     J: '<svg viewBox="0 0 24 16"><path d="M12 1 L21 4 V9 C21 13 16 15 12 16 C8 15 3 13 3 9 V4Z"/></svg>'
   };
   function cardHTML(c, o = {}) {
-    const cls = [o.dim ? 'dim' : '', o.hit ? 'hit' : '', c && c.fresh ? 'deal' : ''].join(' ');
-    if (o.back || !c) return `<div class="card back ${cls}"></div>`;
+    const cls = [o.dim ? 'dim' : '', o.hit ? 'hit' : ''].join(' '), dk = o.dk ? ` data-dk="${o.dk}"` : '';
+    if (o.back || !c) return `<div class="card back ${cls}"${dk}></div>`;
     const rk = RANK_CH[c.r], su = SUIT_CH[c.s], red = c.s === 'h' || c.s === 'd';
     let art;
     let fa = '';
@@ -65,7 +65,7 @@
     else if (c.r === 14) art = `<span class="pip ace" style="left:50%;top:50%">${su}</span>`;
     else art = PIPS[c.r].map(([x, y, f]) => `<span class="pip${f ? ' f' : ''}${c.r >= 8 ? ' sm' : ''}" style="left:${x}%;top:${y}%">${su}</span>`).join('');
     const cn = `<b class="${c.r === 10 ? 'ten' : ''}">${rk}</b><i>${su}</i>`;
-    return `<div class="card ${red ? 'red' : ''} ${cls}"><div class="corner tl">${cn}</div><div class="corner br">${cn}</div><div class="art${fa}">${art}</div></div>`;
+    return `<div class="card ${red ? 'red' : ''} ${cls}"${dk}><div class="corner tl">${cn}</div><div class="corner br">${cn}</div><div class="art${fa}">${art}</div></div>`;
   }
   const DENOMS = [[1000, '#e0b43a'], [500, '#7a3fb5'], [100, '#1c1c1c'], [25, '#1f9a52'], [5, '#c62f3a'], [1, '#e8e8e8']];
   function chipsHTML(amt) {
@@ -83,7 +83,14 @@
     const humans = G.players.filter(q => q.type === 'human' && !q.out);
     return humans.length <= 1 || unlocked === p.id;
   }
-  const cache = new Map(); let freshT;
+  const cache = new Map(), animated = new Set();
+  // Deal animation is applied once per card, directly on the element, so re-rendering can never replay it.
+  function popNew() {
+    document.querySelectorAll('#layer [data-dk]').forEach(el => {
+      const k = el.dataset.dk; if (animated.has(k)) return; animated.add(k);
+      el.classList.add('deal'); el.addEventListener('animationend', () => el.classList.remove('deal'), { once: true });
+    });
+  }
   function sync(items) {
     const layer = $('#layer'), keep = new Set();
     for (const [k, html] of items) {
@@ -108,7 +115,7 @@
       const win = G.phase === 'showdown' && G.lastWinners.includes(i);
       const vis = visibleTo(p);
       let hole = '';
-      if (p.hole.length && !p.out) hole = p.hole.map(c => cardHTML(c, { back: !vis, dim: winSet && vis && !p.folded && !winSet.has(c.id), hit: winSet && vis && winSet.has(c.id) && win })).join('');
+      if (p.hole.length && !p.out) hole = p.hole.map((c, ci) => cardHTML(c, { dk: `${G.hand}:h${i}:${ci}`, back: !vis, dim: winSet && vis && !p.folded && !winSet.has(c.id), hit: winSet && vis && winSet.has(c.id) && win })).join('');
       let tag = '';
       if (win) tag = `+${fmt(p.won)}${p.handName ? ' · ' + p.handName : ''}`;
       else if (p.out) tag = 'Out';
@@ -123,17 +130,25 @@
       if (p.bet > 0) items.push(['b' + i, `<div data-k="b${i}" class="bet" style="left:${bx}%;top:${by}%">${chipsHTML(p.bet)}<span>${fmt(p.bet)}${sbbb}</span></div>`]);
       if (i === G.dealer && !p.out) items.push(['d', `<div data-k="d" class="dbtn" style="left:${x + (50 - x) * 0.3 + 4}%;top:${y + (50 - y) * 0.3}%">D</div>`]);
     });
-    let board = '';
+    const stage = $('#stage');
+    if (!stage.querySelector('#layer')) {
+      stage.innerHTML = `<div class="table" id="tableStyle"><div class="rail"></div><div class="felt"><div class="mark">Texas Hold'em</div></div></div><div id="layer"><div class="center"><div class="pot" id="pot"></div><div class="board" id="board"></div></div></div>`;
+      cache.clear();
+    }
+    sync(items);
+    // The pot and each community-card slot update independently, so a pot change never rebuilds the board.
+    const potEl = $('#pot'), potHTML = `<span class="lbl">POT</span>${chipsHTML(potTotal)}<span>${fmt(potTotal)}</span>`;
+    if (potEl._h !== potHTML) { potEl._h = potHTML; potEl.innerHTML = potHTML; }
+    const boardEl = $('#board');
     for (let i = 0; i < 5; i++) {
       const c = G.board[i];
-      board += c ? cardHTML(c, { dim: winSet && !winSet.has(c.id) && G.lastWinners.length && G.players.some(p => p.bestHand && G.lastWinners.includes(p.id)), hit: winSet && winSet.has(c.id) }) : '<div class="slot"></div>';
+      const html = c ? cardHTML(c, { dk: `${G.hand}:b${i}`, dim: winSet && !winSet.has(c.id) && G.lastWinners.length && G.players.some(p => p.bestHand && G.lastWinners.includes(p.id)), hit: winSet && winSet.has(c.id) }) : '<div class="slot"></div>';
+      let slot = boardEl.children[i];
+      if (!slot) { slot = document.createElement('div'); boardEl.appendChild(slot); }
+      if (slot._h !== html) { slot._h = html; slot.innerHTML = html; }
     }
-    items.push(['c', `<div data-k="c" class="center"><div class="pot"><span class="lbl">POT</span>${chipsHTML(potTotal)}<span>${fmt(potTotal)}</span></div><div class="board">${board}</div></div>`]);
-    const stage = $('#stage');
-    if (!stage.querySelector('#layer')) { stage.innerHTML = `<div class="table" id="tableStyle"><div class="rail"></div><div class="felt"><div class="mark">Texas Hold'em</div></div></div><div id="layer"></div>`; cache.clear(); }
-    sync(items);
+    popNew();
     updateMeta();
-    clearTimeout(freshT); freshT = setTimeout(() => { if (!G) return; G.players.forEach(p => p.hole.forEach(c => c.fresh = false)); G.board.forEach(c => c.fresh = false); }, 700);
     renderActions();
   }
 
@@ -210,7 +225,7 @@
   }
   function humanAct(type, to) { if (!G) return; const p = G.players[G.current]; if (!p || p.type !== 'human') return; G.act(type, to); unlocked = null; tick(); }
   function startGame() {
-    clearTimeout(timer); unlocked = null; turnKey = ''; $('#stage').innerHTML = '';
+    clearTimeout(timer); unlocked = null; turnKey = ''; $('#stage').innerHTML = ''; animated.clear();
     const players = seatsCfg.filter(s => s.type !== 'empty').map((s, i) => ({ name: s.name.trim() || (s.type === 'human' ? 'Player' : 'Bot'), type: s.type, avatar: s.avatar }));
     G = new Game({ players, chips: 10000, sb: blinds[0], bb: blinds[1], blindMode }); levelStart = Date.now(); G.onLevel = () => { levelStart = Date.now(); };
     G.onLog = appendLog; $('#log').innerHTML = '';
