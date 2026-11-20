@@ -88,7 +88,12 @@
   function popNew() {
     document.querySelectorAll('#layer [data-dk]').forEach(el => {
       const k = el.dataset.dk; if (animated.has(k)) return; animated.add(k);
-      el.classList.add('deal'); el.addEventListener('animationend', () => el.classList.remove('deal'), { once: true });
+      let cover = null;
+      if (!el.classList.contains('back')) { cover = document.createElement('div'); cover.className = 'card back cover'; el.appendChild(cover); }
+      const m = k.match(/:b(\d)$/), idx = m ? +m[1] : 0;
+      el.style.setProperty('--dd', (m && idx < 3 ? idx * 0.1 : 0) + 's');
+      el.classList.add('dealing');
+      el.addEventListener('animationend', e => { if (e.target !== el) return; el.classList.remove('dealing'); el.style.removeProperty('--dd'); if (cover) cover.remove(); });
     });
   }
   function sync(items) {
