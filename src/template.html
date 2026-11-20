@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Texas Hold'em</title>
+<style>/*CSS*/</style>
+</head>
+<body>
+<div id="app">
+  <div id="bg"></div>
+  <header class="top">
+    <div class="brand">♠ TEXAS HOLD'EM ♦</div>
+    <div class="meta" id="meta">Set up your table to begin</div>
+    <button class="btn" id="btnSettings">🎨<span class="lbl"> Table &amp; Background</span></button>
+    <button class="btn" id="btnPlayers">👥<span class="lbl"> Players</span></button>
+    <button class="btn danger" id="btnReset">↺<span class="lbl"> Reset</span></button>
+  </header>
+  <div class="settings" id="settings"></div>
+  <main>
+    <section class="play">
+      <div class="stagewrap"><div class="stage" id="stage"></div></div>
+      <div class="actions" id="actions"><div class="status">Choose your players to start a game.</div></div>
+    </section>
+    <aside class="logpanel">
+      <h3>📜 Move Log <button class="btn" id="btnCopy">Copy</button></h3>
+      <div id="log"></div>
+    </aside>
+  </main>
+</div>
+<div id="rotate"><div class="ph"></div><h2>Please rotate your phone</h2><p>Texas Hold'em is played in landscape mode on phones.</p></div>
+<div class="modal" id="setup"><div class="sheet">
+  <h2>♠ New Table</h2><p class="sub">Choose who sits at the table. Add one or more human players (they share this screen, hot-seat style) and fill other seats with bots.</p>
+  <div id="setupBody"></div>
+  <div class="dealbar"><div id="setupOpts" class="opts"></div><button class="deal" id="btnStart">▶ DEAL ME IN</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+<script>/*ENGINE*/</script>
+<script>/*BG*/</script>
+<script>/*UI*/</script>
+</body>
+</html>
