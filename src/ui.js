@@ -86,12 +86,14 @@
   const cache = new Map(), animated = new Set();
   // Deal animation is applied once per card, directly on the element, so re-rendering can never replay it.
   function popNew() {
+    let nd = 0;
     document.querySelectorAll('#layer [data-dk]').forEach(el => {
       const k = el.dataset.dk; if (animated.has(k)) return; animated.add(k);
       let cover = null;
       if (!el.classList.contains('back')) { cover = document.createElement('div'); cover.className = 'card back cover'; el.appendChild(cover); }
       const m = k.match(/:b(\d)$/), idx = m ? +m[1] : 0;
       el.style.setProperty('--dd', (m && idx < 3 ? idx * 0.1 : 0) + 's');
+      if (nd < 8) { Snd.play('deal', nd * 0.06); if (cover) setTimeout(() => Snd.play('flip'), 330 + nd * 60); nd++; }
       el.classList.add('dealing');
       el.addEventListener('animationend', e => { if (e.target !== el) return; el.classList.remove('dealing'); el.style.removeProperty('--dd'); if (cover) cover.remove(); });
     });
@@ -195,7 +197,7 @@
       A.innerHTML = `<div class="status">🔒 <b>${esc(p.name)}</b>, it's your turn. Pass the device, then reveal your cards in private.</div><div class="row"><button class="abtn raise" id="aReveal">I'm ${esc(p.name)} — show my cards</button></div>`; return;
     }
     const key = `${G.hand}-${G.phase}-${G.current}-${G.currentBet}`;
-    if (bot) raiseVal = L.minRaiseTo; else if (key !== turnKey) { turnKey = key; raiseVal = L.minRaiseTo; }
+    if (bot) raiseVal = L.minRaiseTo; else if (key !== turnKey) { turnKey = key; raiseVal = L.minRaiseTo; Snd.play('turn'); }
     const step = 25;
     const callLbl = L.canCheck ? 'Check' : (L.callAmt >= p.chips ? `Call all-in ${fmt(L.callAmt)}` : `Call ${fmt(L.callAmt)}`);
     const verb = G.currentBet === 0 ? 'Bet' : 'Raise to';
@@ -210,7 +212,18 @@
   }
 
   /* ---------- log ---------- */
+  function logSound(e) {
+    const x = e.text;
+    if (e.kind === 'action' || e.kind === 'blind') {
+      if (/ALL-IN/.test(x)) Snd.play('allin');
+      else if (/ folds/.test(x)) Snd.play('fold');
+      else if (/ checks/.test(x)) Snd.play('check');
+      else Snd.play('chips', /raises|bets/.test(x) ? 5 : 3);
+    } else if (e.kind === 'win') Snd.play('win');
+    else if (e.kind === 'level') Snd.play('level');
+  }
   function appendLog(e) {
+    logSound(e);
     const d = document.createElement('div'); d.className = e.kind;
     d.innerHTML = esc(e.text).replace(/(10|[2-9JQKA])([♠♥♦♣])/g, (m, r, s) => `<span class="${s === '♥' || s === '♦' ? 'r' : 'k'}">${m}</span>`);
     const L = $('#log'), atEnd = L.scrollTop + L.clientHeight >= L.scrollHeight - 40;
@@ -272,9 +285,13 @@
   }
 
   /* ---------- events ---------- */
+  const sb = $('#btnSound'); if (sb) sb.textContent = Snd.on ? '🔊' : '🔇';
+  document.addEventListener('pointerdown', () => Snd.unlock(), { once: true });
   document.addEventListener('click', e => {
     const t = e.target.closest('button'); if (!t) return;
     const id = t.id;
+    if (id === 'btnSound') { const o = Snd.toggle(); t.textContent = o ? '🔊' : '🔇'; return; }
+    if (!/^a(Fold|Call|Raise)$/.test(id)) Snd.play(id === 'btnStart' || id === 'aNext' ? 'shuffle' : 'click');
     if (id === 'aFold') humanAct('fold');
     else if (id === 'aCall') humanAct('call');
     else if (id === 'aRaise') { const L = G.legal(); humanAct('raise', L.minRaiseTo >= L.maxRaiseTo ? L.maxRaiseTo : raiseVal); }

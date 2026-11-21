@@ -26,13 +26,13 @@
     },
     casino(p) {
       const r = rng(11); let slots = '', lights = '';
-      for (let i = 0; i < 12; i++) { const x = 30 + i * 133; const hue = [50, 190, 320, 120][i % 4]; slots += `<g><rect x="${x}" y="330" width="112" height="240" rx="12" fill="#1c0b14" stroke="#c9a227" stroke-width="3"/><rect x="${x + 12}" y="360" width="88" height="80" rx="6" fill="hsl(${hue},90%,${40 + r() * 20}%)"/><rect x="${x + 12}" y="455" width="88" height="22" rx="4" fill="#0a0408"/><circle cx="${x + 56}" cy="345" r="6" fill="hsl(${hue},100%,65%)"/></g>`; }
+      for (let i = 0; i < 12; i++) { const x = 30 + i * 133; const hue = [50, 190, 320, 120][i % 4]; slots += `<g><rect x="${x}" y="330" width="112" height="240" rx="12" fill="#1c0b14" stroke="#c9a227" stroke-width="3"/><rect x="${x + 12}" y="360" width="88" height="80" rx="6" fill="hsl(${hue},55%,${20 + r() * 10}%)"/><rect x="${x + 12}" y="455" width="88" height="22" rx="4" fill="#0a0408"/><circle cx="${x + 56}" cy="345" r="6" fill="hsl(${hue},100%,65%)"/></g>`; }
       for (let i = 0; i < 9; i++) lights += `<circle cx="${60 + i * 185}" cy="50" r="90" fill="url(#${p}l)"/><circle cx="${60 + i * 185}" cy="50" r="9" fill="#fff3c4"/>`;
       return wrap(`<defs><linearGradient id="${p}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d0a14"/><stop offset="1" stop-color="#150509"/></linearGradient>
 <radialGradient id="${p}l"><stop offset="0" stop-color="#ffd27a" stop-opacity=".55"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
-<pattern id="${p}c" width="80" height="80" patternUnits="userSpaceOnUse"><rect width="80" height="80" fill="#4a0d1c"/><path d="M40 6 L74 40 L40 74 L6 40Z" fill="none" stroke="#d9b45a" stroke-opacity=".28" stroke-width="3"/><circle cx="40" cy="40" r="5" fill="#d9b45a" fill-opacity=".3"/></pattern>${glow(p + 'n', 6)}</defs>
+<filter id="${p}bl"><feGaussianBlur stdDeviation="3"/></filter><pattern id="${p}c" width="80" height="80" patternUnits="userSpaceOnUse"><rect width="80" height="80" fill="#4a0d1c"/><path d="M40 6 L74 40 L40 74 L6 40Z" fill="none" stroke="#d9b45a" stroke-opacity=".28" stroke-width="3"/><circle cx="40" cy="40" r="5" fill="#d9b45a" fill-opacity=".3"/></pattern>${glow(p + 'n', 6)}</defs>
 <rect width="1600" height="900" fill="url(#${p}b)"/>${lights}
-<rect y="300" width="1600" height="30" fill="#3a1520"/>${slots}
+<rect y="300" width="1600" height="30" fill="#3a1520"/><g opacity=".55" filter="url(#${p}bl)">${slots}</g>
 <rect x="190" y="0" width="46" height="640" fill="#7b5d1a" opacity=".55"/><rect x="800" y="0" width="46" height="640" fill="#7b5d1a" opacity=".55"/><rect x="1380" y="0" width="46" height="640" fill="#7b5d1a" opacity=".55"/>
 <text x="800" y="205" text-anchor="middle" font-size="120" font-weight="900" font-family="Georgia,serif" fill="#ff3d6e" filter="url(#${p}n)" opacity=".9">LUCKY 7</text>
 <text x="800" y="205" text-anchor="middle" font-size="120" font-weight="900" font-family="Georgia,serif" fill="none" stroke="#ffe9f0" stroke-width="3">LUCKY 7</text>

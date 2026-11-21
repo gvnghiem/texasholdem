@@ -249,3 +249,7 @@ html{scrollbar-gutter:stable}
   .actions{height:58px;max-width:none}.stagewrap{max-width:none}
 }
 @media (max-width:950px) and (min-height:521px){.stagewrap,.actions{max-width:100%}}
+
+/* keep the scenery behind the table on small screens */
+@media (orientation:landscape) and (max-height:520px){#bg svg{filter:brightness(.72) saturate(.85)}#bg::after{background:radial-gradient(ellipse at 50% 55%,rgba(0,0,0,.12) 30%,rgba(0,0,0,.6) 100%)}}
+#btnSound{min-width:2.4em}
